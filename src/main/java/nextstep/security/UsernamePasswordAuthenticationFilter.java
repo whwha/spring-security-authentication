@@ -1,6 +1,9 @@
 package nextstep.security;
 
 import nextstep.security.authentication.*;
+import nextstep.security.context.HttpSessionSecurityContextRepository;
+import nextstep.security.context.SecurityContext;
+import nextstep.security.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -9,7 +12,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,7 @@ public class UsernamePasswordAuthenticationFilter extends GenericFilterBean {
     private static final String DEFAULT_REQUEST_URI = "/login";
 
     private final AuthenticationManager authenticationManager;
+    private final HttpSessionSecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     public UsernamePasswordAuthenticationFilter(UserDetailsService userDetailsService) {
         this.authenticationManager = new ProviderManager(
@@ -41,9 +44,11 @@ public class UsernamePasswordAuthenticationFilter extends GenericFilterBean {
             }
 
             Authentication authenticate = this.authenticationManager.authenticate(authentication);
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authenticate);
+            SecurityContextHolder.setContext(context);
 
-            HttpSession session = ((HttpServletRequest) request).getSession();
-            session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, authenticate);
+            securityContextRepository.saveContext(context, (HttpServletRequest) request, (HttpServletResponse) response);
 
         } catch (Exception e) {
             ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
