@@ -1,50 +1,74 @@
 package nextstep.security;
 
+import nextstep.security.authentication.*;
 import org.springframework.http.HttpHeaders;
-import org.springframework.util.Base64Utils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
 
 public class BasicAuthenticationFilter extends OncePerRequestFilter {
-    private final UserDetailsService userDetailsService;
+    public static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
+
+    private final AuthenticationManager authenticationManager;
 
     public BasicAuthenticationFilter(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
+        this.authenticationManager = new ProviderManager(
+                List.of(new DaoAuthenticationProvider(userDetailsService))
+        );
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
         try {
-            checkAuthentication(request);
+            Authentication authentication = convert(request);
+            if (authentication == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            this.authenticationManager.authenticate(authentication);
+
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 
-    private void checkAuthentication(HttpServletRequest request) {
-        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        String[] split = authorization.split(" ");
-        String type = split[0];
-        String credential = split[1];
-
-        if (!"Basic".equalsIgnoreCase(type)) {
+    private Authentication convert(HttpServletRequest request) {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (header == null) {
+            return null;
+        }
+        header = header.trim();
+        if (!StringUtils.startsWithIgnoreCase(header, AUTHENTICATION_SCHEME_BASIC)) {
+            return null;
+        }
+        if (header.equalsIgnoreCase(AUTHENTICATION_SCHEME_BASIC)) {
             throw new AuthenticationException();
         }
 
-        String decodedCredential = new String(Base64Utils.decodeFromString(credential));
-        String[] emailAndPassword = decodedCredential.split(":");
+        byte[] base64Token = header.substring(6).getBytes(StandardCharsets.UTF_8);
+        byte[] decoded = decode(base64Token);
+        String token = new String(decoded, StandardCharsets.UTF_8);
+        int delim = token.indexOf(":");
+        if (delim == -1) {
+            throw new AuthenticationException();
+        }
 
-        String email = emailAndPassword[0];
-        String password = emailAndPassword[1];
+        return UsernamePasswordAuthenticationToken
+                .unauthenticated(token.substring(0, delim), token.substring(delim + 1));
+    }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        if (!Objects.equals(userDetails.getPassword(), password)) {
+    private byte[] decode(byte[] base64Token) {
+        try {
+            return Base64.getDecoder().decode(base64Token);
+        } catch (IllegalArgumentException ex) {
             throw new AuthenticationException();
         }
     }
