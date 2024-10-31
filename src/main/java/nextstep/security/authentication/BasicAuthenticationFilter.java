@@ -1,8 +1,8 @@
-package nextstep.security;
+package nextstep.security.authentication;
 
-import nextstep.security.authentication.*;
 import nextstep.security.context.SecurityContext;
 import nextstep.security.context.SecurityContextHolder;
+import nextstep.security.userdetails.UserDetailsService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;

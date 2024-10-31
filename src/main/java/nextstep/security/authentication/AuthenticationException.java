@@ -1,4 +1,4 @@
-package nextstep.security;
+package nextstep.security.authentication;
 
 public class AuthenticationException extends RuntimeException {
     public AuthenticationException() {
