@@ -2,6 +2,7 @@ package nextstep.app.ui;
 
 import nextstep.app.domain.Member;
 import nextstep.app.domain.MemberRepository;
+import nextstep.security.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,5 +31,4 @@ public class MemberController {
     public ResponseEntity<Void> handleAuthenticationException() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
-
 }

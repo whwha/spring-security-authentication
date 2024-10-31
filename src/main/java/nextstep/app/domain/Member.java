@@ -1,7 +1,5 @@
 package nextstep.app.domain;
 
-import nextstep.app.ui.AuthenticationException;
-
 public class Member {
     private final String email;
     private final String password;
@@ -33,7 +31,7 @@ public class Member {
 
     public void checkPassword(String password) {
         if (!this.password.equals(password)) {
-            throw new AuthenticationException("비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
     }
 }
