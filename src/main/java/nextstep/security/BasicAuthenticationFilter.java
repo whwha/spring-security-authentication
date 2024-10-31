@@ -2,27 +2,27 @@ package nextstep.security;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Base64Utils;
-import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Objects;
 
-public class BasicAuthenticationInterceptor implements HandlerInterceptor {
+public class BasicAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
 
-    public BasicAuthenticationInterceptor(UserDetailsService userDetailsService) {
+    public BasicAuthenticationFilter(UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
         try {
             checkAuthentication(request);
-            return true;
+            filterChain.doFilter(request, response);
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
         }
     }
 
@@ -48,5 +48,4 @@ public class BasicAuthenticationInterceptor implements HandlerInterceptor {
             throw new AuthenticationException();
         }
     }
-
 }

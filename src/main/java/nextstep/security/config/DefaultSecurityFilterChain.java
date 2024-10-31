@@ -19,6 +19,6 @@ public class DefaultSecurityFilterChain implements SecurityFilterChain {
 
     @Override
     public List<Filter> getFilters() {
-        return List.of();
+        return filters;
     }
 }
