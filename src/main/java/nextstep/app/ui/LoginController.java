@@ -4,6 +4,7 @@ import nextstep.app.domain.MemberRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,6 +24,15 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<Void> login(HttpServletRequest request, HttpSession session) {
         return ResponseEntity.ok().build();
+    }
+
+    //    @GetMapping("/hello")
+//    public ResponseEntity<Void> home(HttpServletRequest request, HttpSession session) {
+//        return ResponseEntity.ok().build();
+//    }
+    @GetMapping("/hello")
+    public String hello() {
+        return "Hello!";
     }
 
     @ExceptionHandler(AuthenticationException.class)
