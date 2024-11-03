@@ -1,33 +1,45 @@
 package nextstep.app.security;
 
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.stereotype.Component;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
-
-@Component
+@Service
 public class CustomAuthenticationProvider implements AuthenticationProvider {
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
-        String password = String.valueOf(authentication.getCredentials());
-
-        if ("john".equals(username) && "12345".equals(password)) {
-            return new UsernamePasswordAuthenticationToken(username, password, List.of());
-        } else {
-            throw new AuthenticationCredentialsNotFoundException("Error!");
-        }
+        String password = authentication.getCredentials().toString();
+        CustomUserDetails user = userDetailsService.loadUserByUsername(username);
+//        return checkPassword(user, password, bCryptPasswordEncoder);
+        return checkPassword(user, password, NoOpPasswordEncoder.getInstance());
     }
 
     @Override
-    public boolean supports(Class<?> authenticationType) {
-        return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authenticationType);
+    public boolean supports(Class<?> authentication) {
+        return false;
+    }
+
+    private Authentication checkPassword(CustomUserDetails user, String rawPassword, PasswordEncoder encoder) {
+        if (encoder.matches(rawPassword, user.getPassword())) {
+            return new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword(), user.getAuthorities());
+        } else {
+            throw new BadCredentialsException("Bad credentials");
+        }
     }
 }
 
