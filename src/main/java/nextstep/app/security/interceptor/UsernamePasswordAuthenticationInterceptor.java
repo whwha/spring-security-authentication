@@ -1,8 +1,7 @@
-package nextstep.app.interceptor;
+package nextstep.app.security.interceptor;
 
-import nextstep.app.domain.Member;
-import nextstep.app.domain.MemberRepository;
-import nextstep.app.ui.AuthenticationException;
+import nextstep.app.security.UserDetails;
+import nextstep.app.security.UserDetailsService;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,11 +10,10 @@ import java.util.Map;
 
 public class UsernamePasswordAuthenticationInterceptor implements HandlerInterceptor {
     public static final String SPRING_SECURITY_CONTEXT_KEY = "SPRING_SECURITY_CONTEXT";
+    private final UserDetailsService userDetailsService;
 
-    private final MemberRepository memberRepository;
-
-    public UsernamePasswordAuthenticationInterceptor(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
+    public UsernamePasswordAuthenticationInterceptor(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -24,15 +22,13 @@ public class UsernamePasswordAuthenticationInterceptor implements HandlerInterce
         String username = parameterMap.get("username")[0];
         String password = parameterMap.get("password")[0];
 
-        Member member = memberRepository
-                .findByEmail(username)
-                .orElseThrow(AuthenticationException::new);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        if (!member.getPassword().equals(password)) {
+        if (!userDetails.getPassword().equals(password)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
-        request.getSession().setAttribute(SPRING_SECURITY_CONTEXT_KEY, member);
+        request.getSession().setAttribute(SPRING_SECURITY_CONTEXT_KEY, userDetails);
         return true;
     }
 }
