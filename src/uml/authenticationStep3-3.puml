@@ -1,0 +1,31 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+allowmixing
+skinparam linetype ortho
+
+
+interface Authentication
+interface AuthenticationManager
+interface AuthenticationProvider
+interface UserDetailsService
+
+class UsernamePasswordAuthenticationToken
+class ProviderManager
+class DaoAuthenticationProvider
+
+
+Authentication <-- AuthenticationManager
+Authentication <-- AuthenticationProvider
+
+
+Authentication <|.. UsernamePasswordAuthenticationToken
+AuthenticationManager <|.. ProviderManager
+AuthenticationProvider <|.. DaoAuthenticationProvider
+
+ProviderManager *- DaoAuthenticationProvider
+UsernamePasswordAuthenticationToken <--- DaoAuthenticationProvider
+UserDetailsService <-- DaoAuthenticationProvider
+
+
+@enduml

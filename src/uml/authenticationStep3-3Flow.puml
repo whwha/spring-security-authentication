@@ -1,0 +1,36 @@
+@startuml
+'https://plantuml.com/state-diagram
+
+skinparam linetype ortho
+
+rectangle Client
+rectangle AuthenticationFilter
+rectangle UsernamePasswordAuthenticationToken
+rectangle AuthenticationManager <<interface>>
+rectangle ProviderManager
+collections AuthenticationProviders
+rectangle UserDetailsService
+rectangle UserDetails <<interface>>
+rectangle User
+rectangle SecurityContextHolder {
+    rectangle SecurityContext {
+        rectangle Authentication
+    }
+}
+
+
+Client -> AuthenticationFilter: 1
+UsernamePasswordAuthenticationToken <-- AuthenticationFilter: 2
+AuthenticationFilter -> AuthenticationManager: 3
+AuthenticationManager <-- ProviderManager: implements
+AuthenticationManager -> AuthenticationProviders: 4
+AuthenticationProviders --> UserDetailsService: 5
+UserDetailsService -- UserDetails: 6
+UserDetails -- User: implements
+AuthenticationProviders <-- UserDetailsService: 7
+AuthenticationManager <- AuthenticationProviders: 8
+AuthenticationFilter <- AuthenticationManager: 9
+
+AuthenticationFilter ---> SecurityContextHolder: 10
+
+@enduml

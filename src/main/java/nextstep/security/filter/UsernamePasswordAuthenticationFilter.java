@@ -1,8 +1,8 @@
 package nextstep.security.filter;
 
 import nextstep.security.AuthenticationException;
-import nextstep.security.UserDetails;
 import nextstep.security.UserDetailsService;
+import nextstep.security.authentication.*;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -11,17 +11,21 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class UsernamePasswordAuthenticationFilter extends GenericFilterBean {
     public static final String SPRING_SECURITY_CONTEXT_KEY = "SPRING_SECURITY_CONTEXT";
     private static final String DEFAULT_REQUEST_URI = "/login";
 
-    private final UserDetailsService userDetailsService;
+    private final AuthenticationManager authenticationManager;
 
     public UsernamePasswordAuthenticationFilter(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
+        this.authenticationManager = new ProviderManager(
+                List.of(new DaoAuthenticationProvider(userDetailsService))
+        );
     }
 
 
@@ -33,19 +37,31 @@ public class UsernamePasswordAuthenticationFilter extends GenericFilterBean {
         }
 
         try {
-            HttpServletRequest request = (HttpServletRequest) servletRequest;
-            Map<String, String[]> parameterMap = request.getParameterMap();
-            String username = parameterMap.get("username")[0];
-            String password = parameterMap.get("password")[0];
-
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            if (!userDetails.getPassword().equals(password)) {
-                throw new AuthenticationException();
+            Authentication authentication = convert(servletRequest);
+            if (authentication == null) {
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
             }
-            request.getSession().setAttribute(SPRING_SECURITY_CONTEXT_KEY, userDetails);
+
+            Authentication authenticate = this.authenticationManager.authenticate(authentication);
+            HttpSession session = ((HttpServletRequest) servletRequest).getSession();
+            session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, authenticate);
         } catch (AuthenticationException e) {
             ((HttpServletResponse) servletResponse).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
+
+    private Authentication convert(ServletRequest servletRequest) {
+        try {
+            HttpServletRequest request = (HttpServletRequest) servletRequest;
+            Map<String, String[]> parameterMap = request.getParameterMap();
+            String username = parameterMap.get("username")[0];
+            String password = parameterMap.get("password")[0];
+            return UsernamePasswordAuthenticationToken.unauthenticated(username, password);
+
+        } catch (AuthenticationException e) {
+            return null;
+        }
+    }
+
 }

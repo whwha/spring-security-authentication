@@ -1,8 +1,8 @@
 package nextstep.security.filter;
 
 import nextstep.security.AuthenticationException;
-import nextstep.security.UserDetails;
 import nextstep.security.UserDetailsService;
+import nextstep.security.authentication.*;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -11,26 +11,29 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 public class BasicAuthenticationFilter extends OncePerRequestFilter {
-    public static final String SPRING_SECURITY_CONTEXT_KEY = "SPRING_SECURITY_CONTEXT";
-    private final UserDetailsService userDetailsService;
+    private final AuthenticationManager authenticationManager;
 
     public BasicAuthenticationFilter(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
+        this.authenticationManager = new ProviderManager(
+                List.of(new DaoAuthenticationProvider(userDetailsService))
+        );
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            checkAuthentication(request);
+            Authentication authentication = checkAuthentication(request);
+            authenticationManager.authenticate(authentication);
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 
-    private void checkAuthentication(HttpServletRequest request) {
+    private Authentication checkAuthentication(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
 
         String[] split = authorization.split(" ");
@@ -46,9 +49,6 @@ public class BasicAuthenticationFilter extends OncePerRequestFilter {
         String email = emailAndPassword[0];
         String password = emailAndPassword[1];
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        if (!userDetails.getPassword().equals(password)) {
-            throw new AuthenticationException();
-        }
+        return UsernamePasswordAuthenticationToken.unauthenticated(email, password);
     }
 }
