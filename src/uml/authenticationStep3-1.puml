@@ -17,12 +17,10 @@ package Servlet-FilterChain {
 }
 
 
-
-
 package Spring-SecurityFilterChain {
     interface SecurityFilterChain
     class DefaultSecurityFilterChain
-    class YourOwnSecurityFilters #orange ##[dotted]
+    class YourOwnSecurityFilters <<SecurityConfig injection>> #moccasin ##[dotted]
 }
 
 
@@ -38,36 +36,8 @@ FilterChainProxy +-- VirtualFilterChain: nested class
 '    https://www.uml-diagrams.org/nested-classifier.html
 
 SecurityFilterChain <|.. DefaultSecurityFilterChain
-VirtualFilterChain *- DefaultSecurityFilterChain
+VirtualFilterChain o- DefaultSecurityFilterChain
 DefaultSecurityFilterChain *-- YourOwnSecurityFilters
-
-
-
-'package app {
-'    class Member
-'    class MemberRepository
-'}
-'
-'Member <- MemberRepository
-'
-'package security {
-'    class BasicAuthenticationInterceptor
-'    class UsernamePasswordAuthenticationInterceptor
-'
-'    interface UserDetails
-'    interface UserDetailsService
-'}
-'
-''Member ..|> UserDetails
-'MemberRepository ..|> UserDetailsService
-'
-'UserDetailsService <-- BasicAuthenticationInterceptor
-'UserDetailsService <-- UsernamePasswordAuthenticationInterceptor
-'
-'UserDetails <-- BasicAuthenticationInterceptor
-'UserDetails <-- UsernamePasswordAuthenticationInterceptor
-'UserDetails <- UserDetailsService
-
 
 
 @enduml
