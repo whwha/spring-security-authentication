@@ -1,0 +1,73 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+allowmixing
+skinparam linetype ortho
+'skinparam linetype polyline
+
+'rectangle client
+
+package Servlet-FilterChain {
+    interface FilterChain
+    interface Filter
+    abstract class GenericFilterBean
+    class DelegatingFilterProxy
+    class FilterChainProxy
+    class VirtualFilterChain
+}
+
+
+
+
+package Spring-SecurityFilterChain {
+    interface SecurityFilterChain
+    class DefaultSecurityFilterChain
+    class YourOwnSecurityFilters #orange ##[dotted]
+}
+
+
+Filter <|.. GenericFilterBean
+GenericFilterBean <|-- DelegatingFilterProxy
+GenericFilterBean <|-- FilterChainProxy
+
+DelegatingFilterProxy *- FilterChainProxy
+
+FilterChain <|.... VirtualFilterChain
+FilterChainProxy +-- VirtualFilterChain: nested class
+'    uml 2.x spec: nested class
+'    https://www.uml-diagrams.org/nested-classifier.html
+
+SecurityFilterChain <|.. DefaultSecurityFilterChain
+VirtualFilterChain *- DefaultSecurityFilterChain
+DefaultSecurityFilterChain *-- YourOwnSecurityFilters
+
+
+
+'package app {
+'    class Member
+'    class MemberRepository
+'}
+'
+'Member <- MemberRepository
+'
+'package security {
+'    class BasicAuthenticationInterceptor
+'    class UsernamePasswordAuthenticationInterceptor
+'
+'    interface UserDetails
+'    interface UserDetailsService
+'}
+'
+''Member ..|> UserDetails
+'MemberRepository ..|> UserDetailsService
+'
+'UserDetailsService <-- BasicAuthenticationInterceptor
+'UserDetailsService <-- UsernamePasswordAuthenticationInterceptor
+'
+'UserDetails <-- BasicAuthenticationInterceptor
+'UserDetails <-- UsernamePasswordAuthenticationInterceptor
+'UserDetails <- UserDetailsService
+
+
+
+@enduml

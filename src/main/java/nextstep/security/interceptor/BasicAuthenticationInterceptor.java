@@ -1,8 +1,8 @@
-package nextstep.app.security.interceptor;
+package nextstep.security.interceptor;
 
-import nextstep.app.security.UserDetails;
-import nextstep.app.security.UserDetailsService;
 import nextstep.app.ui.AuthenticationException;
+import nextstep.security.UserDetails;
+import nextstep.security.UserDetailsService;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;

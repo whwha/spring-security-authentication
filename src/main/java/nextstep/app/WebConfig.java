@@ -2,11 +2,11 @@ package nextstep.app;
 
 import nextstep.app.domain.Member;
 import nextstep.app.domain.MemberRepository;
-import nextstep.app.security.UserDetails;
-import nextstep.app.security.UserDetailsService;
-import nextstep.app.security.interceptor.BasicAuthenticationInterceptor;
-import nextstep.app.security.interceptor.UsernamePasswordAuthenticationInterceptor;
 import nextstep.app.ui.AuthenticationException;
+import nextstep.security.UserDetails;
+import nextstep.security.UserDetailsService;
+import nextstep.security.interceptor.BasicAuthenticationInterceptor;
+import nextstep.security.interceptor.UsernamePasswordAuthenticationInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
