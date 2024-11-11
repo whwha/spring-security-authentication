@@ -3,6 +3,9 @@ package nextstep.security.filter;
 import nextstep.security.AuthenticationException;
 import nextstep.security.UserDetailsService;
 import nextstep.security.authentication.*;
+import nextstep.security.context.HttpSessionSecurityContextRepository;
+import nextstep.security.context.SecurityContext;
+import nextstep.security.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -11,16 +14,15 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 public class UsernamePasswordAuthenticationFilter extends GenericFilterBean {
-    public static final String SPRING_SECURITY_CONTEXT_KEY = "SPRING_SECURITY_CONTEXT";
     private static final String DEFAULT_REQUEST_URI = "/login";
 
     private final AuthenticationManager authenticationManager;
+    private final HttpSessionSecurityContextRepository httpSessionSecurityContextRepository = new HttpSessionSecurityContextRepository();
 
     public UsernamePasswordAuthenticationFilter(UserDetailsService userDetailsService) {
         this.authenticationManager = new ProviderManager(
@@ -44,8 +46,11 @@ public class UsernamePasswordAuthenticationFilter extends GenericFilterBean {
             }
 
             Authentication authenticate = this.authenticationManager.authenticate(authentication);
-            HttpSession session = ((HttpServletRequest) servletRequest).getSession();
-            session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, authenticate);
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authenticate);
+            SecurityContextHolder.setContext(securityContext);
+
+            httpSessionSecurityContextRepository.saveContext(securityContext, (HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse);
         } catch (AuthenticationException e) {
             ((HttpServletResponse) servletResponse).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }

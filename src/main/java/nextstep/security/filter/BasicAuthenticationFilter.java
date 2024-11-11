@@ -3,6 +3,9 @@ package nextstep.security.filter;
 import nextstep.security.AuthenticationException;
 import nextstep.security.UserDetailsService;
 import nextstep.security.authentication.*;
+import nextstep.security.context.SecurityContext;
+import nextstep.security.context.SecurityContextHolder;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -26,7 +29,17 @@ public class BasicAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             Authentication authentication = checkAuthentication(request);
-            authenticationManager.authenticate(authentication);
+            if (authentication == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            Authentication authenticate = authenticationManager.authenticate(authentication);
+
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authenticate);
+            SecurityContextHolder.setContext(securityContext);
+
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -34,9 +47,12 @@ public class BasicAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Authentication checkAuthentication(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (header == null) {
+            return null;
+        }
 
-        String[] split = authorization.split(" ");
+        String[] split = header.split(" ");
         String type = split[0];
         String credential = split[1];
 

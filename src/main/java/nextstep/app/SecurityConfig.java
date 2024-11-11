@@ -32,6 +32,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain() {
         return new DefaultSecurityFilterChain(List.of(
+                new SecurityContextHolderFilter(),
                 new UsernamePasswordAuthenticationFilter(userDetailsService()),
                 new BasicAuthenticationFilter(userDetailsService())
         ));
