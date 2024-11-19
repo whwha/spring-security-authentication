@@ -1,6 +1,6 @@
 # spring-security-authentication
 
-# 1단계
+# 1단계 - 사용자 인증 구현
 
 ## 목표
 
@@ -23,7 +23,7 @@
 - 요청의 Authorization 헤더에서 Basic 인증 정보를 추출하여 인증을 처리한다.
 - 인증 성공 시 Session을 사용하여 인증 정보를 저장한다.
 
-# 2단계
+# 2단계 - 리팩터링
 
 ## 목표
 
@@ -86,9 +86,9 @@ public class BasicAuthenticationInterceptor implements HandlerInterceptor {
     - 패키지간 양방향 참조가 발생중이다.
 - 양방향 의존에서 단방향 의존 만들기위해서 중간 객체를 이용하여 의존성 사이클을 제거할 수 있다.
     - [우아한 객체지향 세미나 - 패키지 의존 문제 해결](https://youtu.be/dJ5C4qRqAgA?t=2941)
-      ![image](https://nextstep-storage.s3.ap-northeast-2.amazonaws.com/5e1eb712c530482a9737ac83016f30bd)
+      ![image](./image/day1-step2-1.png)
 
-# 3단계
+# 3단계 - 스프링 시큐리티 구조 적용
 
 ## 1. SecurityFilterChain 적용
 
@@ -101,7 +101,7 @@ public class BasicAuthenticationInterceptor implements HandlerInterceptor {
 - 추가로 필요한 코드가 있는데 스프링 시큐리티 코드를 참고하여 작성하는 것을 권장한다. 스프링 시큐리티 필터 체인 공식 문서를 활용하여 구현해도 좋다. 다만 너무 똑같이 만들려고 하면 오히려 힘들 수 있으니
   주의한다.
 
-![image](https://docs.spring.io/spring-security/reference/_images/servlet/architecture/securityfilterchain.png)
+![image](./image/day1-step3-1.png)
 
 ## 2. AuthenticationManager를 활용한 인증 추상화
 
@@ -113,7 +113,7 @@ public class BasicAuthenticationInterceptor implements HandlerInterceptor {
 - `ProviderManager`, `DaoAuthenticationProvider`를 구현하며 흐름을 제어하는 코드를 만든다.
 - 그 외 필요한 객체(`UsernamePasswordAuthenticationToken` 등)를 구현하며 기능을 완성한 후 기존 필터에서 인증 로직을 분리한다.
 
-![image](https://nextstep-storage.s3.ap-northeast-2.amazonaws.com/ad3da2895e864a3baca9861dfdb99650)
+![image](./image/day1-step3-2.png)
 
 - 주요 클래스: `AuthenticationManager`, `ProviderManager`, `AuthenticationProvider`, `DaoAuthenticationProvider`
 
@@ -124,7 +124,7 @@ public class BasicAuthenticationInterceptor implements HandlerInterceptor {
 - `SecurityContext`, `SecurityContextHolder`를 작성하여 `Authentication` 객체를 보관할 구조의 뼈대를 만든다.
 - `BasicAuthenticationFilter`에서 `SecurityContextHolder`를 활용하여 `Authentication` 객체 보관하도록 한다.
 
-![image](https://docs.spring.io/spring-security/reference/_images/servlet/authentication/architecture/securitycontextholder.png)
+![image](./image/day1-step3-3.png)
 
 - 주요 클래스: SecurityContextHolder, SecurityContext
 
@@ -227,8 +227,7 @@ public class CheckAuthenticationFilter extends GenericFilterBean {
 - 인증 방식에 따라 authenticate 메서드 내에서 처리 방식이 달라진다. 조건문으로 구현하기 보다는 **인증 처리 객체를 별도로 두는 것을 추천**한다. 아래의 이미지를 참고해서
   `ProviderManager`와 `AuthenticationProvider`의 개념을 활용할 수 있다.
 
-![AuthenticationManager](https://docs.spring.io/spring-security/reference/_images/servlet/authentication/architecture/providermanager-parent.png)
-![ProviderManager](https://docs.spring.io/spring-security/reference/_images/servlet/authentication/architecture/providermanager.png)
+![image](./image/day1-step3-4.png)
 
 - 참고할 요소
     - AuthenticationManager
